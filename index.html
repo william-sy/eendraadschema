@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eendraadsschema Editor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Eendraadsschema Editor</h1>
+            <div class="toolbar">
+                <button id="undoBtn" class="btn btn-secondary">↶ Ongedaan maken</button>
+                <button id="redoBtn" class="btn btn-secondary">↷ Opnieuw</button>
+                <button id="clearBtn" class="btn btn-danger">Wissen</button>
+                <button id="drawLineBtn" class="btn btn-secondary">Lijn Tekenen</button>
+                <button id="addTextBtn" class="btn btn-secondary">Tekst Toevoegen</button>
+                <button id="toggleGridBtn" class="btn btn-secondary">Grid Aan/Uit</button>
+                <button id="exportJsonBtn" class="btn btn-primary">Export JSON</button>
+                <button id="importJsonBtn" class="btn btn-primary">Import JSON</button>
+                <button id="exportPngBtn" class="btn btn-success">Export PNG</button>
+                <button id="exportPdfBtn" class="btn btn-success">Export PDF</button>
+                <input type="file" id="jsonFileInput" accept=".json" style="display: none;"> | 
+                <button class="btn btn-success">Github page!</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="symbol-palette">
+                <h2>Symbolen</h2>
+                <input type="text" id="symbolSearch" class="symbol-search" placeholder="Search symbols...">
+                <div id="symbolPalette" class="symbols-grid">
+                </div>
+            </aside>
+
+            <main class="canvas-area">
+                <div class="canvas-wrapper">
+                    <canvas id="schemaCanvas"></canvas>
+                    <div class="resize-handle resize-handle-right"></div>
+                    <div class="resize-handle resize-handle-bottom"></div>
+                    <div class="resize-handle resize-handle-corner"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

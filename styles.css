@@ -1,0 +1,265 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.toolbar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #229954;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+.btn-secondary.active {
+    background-color: #34495e;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.symbol-palette {
+    width: 250px;
+    background-color: white;
+    padding: 1rem;
+    overflow-y: auto;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.symbol-palette h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.symbol-search {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.symbol-search:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.symbol-category {
+    margin-bottom: 1.5rem;
+}
+
+.category-header {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.symbols-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.symbol-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: move;
+    transition: all 0.3s ease;
+}
+
+.symbol-item:hover {
+    background-color: #e9ecef;
+    border-color: #3498db;
+    transform: scale(1.05);
+}
+
+.symbol-item svg {
+    margin-bottom: 0.5rem;
+}
+
+.symbol-item span {
+    font-size: 0.85rem;
+    color: #495057;
+    text-align: center;
+}
+
+.canvas-area {
+    flex: 1;
+    background-color: #ecf0f1;
+    overflow: auto;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.canvas-wrapper {
+    position: relative;
+    display: inline-block;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.canvas-wrapper canvas {
+    display: block;
+    border: 1px solid #ddd;
+}
+
+/* Resize handles */
+.resize-handle {
+    position: absolute;
+    background-color: #4a90e2;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.canvas-wrapper:hover .resize-handle {
+    opacity: 0.6;
+}
+
+.resize-handle:hover {
+    opacity: 1 !important;
+}
+
+.resize-handle-right {
+    top: 0;
+    right: -5px;
+    width: 10px;
+    height: 100%;
+    cursor: ew-resize;
+}
+
+.resize-handle-bottom {
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    cursor: ns-resize;
+}
+
+.resize-handle-corner {
+    bottom: -5px;
+    right: -5px;
+    width: 15px;
+    height: 15px;
+    cursor: nwse-resize;
+    background-color: #4a90e2;
+}
+
+#schemaCanvas {
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+/* Scrollbar styling */
+.symbol-palette::-webkit-scrollbar {
+    width: 8px;
+}
+
+.symbol-palette::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.symbol-palette::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.symbol-palette::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

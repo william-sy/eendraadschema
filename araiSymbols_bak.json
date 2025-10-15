@@ -1,0 +1,47 @@
+{
+  "Verlichting": [
+    { "path": "icons/ARAI/SVG/Consumption appliances/Lighting.svg", "display": "Lamp" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Wall light.svg", "display": "Wandlamp" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Fluorescent lamp.svg", "display": "TL-lamp" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Emergency lighting connected to a dedicated circuit.svg", "display": "Noodverlichting" }
+  ],
+  "Schakelaars": [
+    { "path": "icons/ARAI/SVG/Switches/Switch general symbol.svg", "display": "Schakelaar" },
+    { "path": "icons/ARAI/SVG/Switches/Dimmer switch.svg", "display": "Dimmer" },
+    { "path": "icons/ARAI/SVG/Switches/Single pole change over switch.svg", "display": "Wisselschakelaar" },
+    { "path": "icons/ARAI/SVG/Switches/Double pole switch.svg", "display": "Dubbele schakelaar" },
+    { "path": "icons/ARAI/SVG/Switches/Intermediate switch.svg", "display": "Kruisschakelaar" },
+    { "path": "icons/ARAI/SVG/Switches/Push button.svg", "display": "Drukknop" },
+    { "path": "icons/ARAI/SVG/Switches/Impulse relay.svg", "display": "Impulse relais" }
+  ],
+  "Stopcontacten": [
+    { "path": "icons/ARAI/SVG/Socket outlets/Electrical wall outlet.svg", "display": "Stopcontact" },
+    { "path": "icons/ARAI/SVG/Socket outlets/Wall outlet with grounding.svg", "display": "Geaard stopcontact" },
+    { "path": "icons/ARAI/SVG/Socket outlets/Waterproof wall outlet.svg", "display": "Waterdicht stopcontact" },
+    { "path": "icons/ARAI/SVG/Socket outlets/Wall outlet with double pole switch.svg", "display": "Stopcontact met schakelaar" }
+  ],
+  "Beveiliging": [
+    { "path": "icons/ARAI/SVG/Protection devices/Fuse.svg", "display": "Zekering" },
+    { "path": "icons/ARAI/SVG/Protection devices/Circuit breaker .svg", "display": "Automaat" },
+    { "path": "icons/ARAI/SVG/Protection devices/Residual-current circuit breaker.svg", "display": "Aardlekschakelaar" },
+    { "path": "icons/ARAI/SVG/Electrical devices/Distribution board.svg", "display": "Groepenkast" }
+  ],
+  "Apparaten": [
+    { "path": "icons/ARAI/SVG/Consumption appliances/kWh meter.svg", "display": "kWh Meter" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Washing machine.svg", "display": "Wasmachine" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Dishwasher.svg", "display": "Vaatwasser" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Electric oven.svg", "display": "Oven" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Electric stove.svg", "display": "Kookplaat" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Dryer.svg", "display": "Droger" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Refrigerator.svg", "display": "Koelkast" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Boiler.svg", "display": "Boiler" }
+  ],
+  "Communicatie": [
+    { "path": "icons/ARAI/SVG/Consumption appliances/Door bell.svg", "display": "Deurbel" },
+    { "path": "icons/ARAI/SVG/Consumption appliances/Buzzer.svg", "display": "Zoemer" }
+  ],
+  "Diversen": [
+    { "path": "icons/ARAI/SVG/Electrical devices/Junction box.svg", "display": "Aansluitdoos" },
+    { "path": "icons/ARAI/SVG/Electrical devices/Main earth terminal.svg", "display": "Hoofdaardklem" }
+  ]
+}
