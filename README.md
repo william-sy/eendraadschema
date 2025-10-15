@@ -1,6 +1,7 @@
 # Eendraadsschema Editor
 
 Een web-gebaseerde editor voor het maken van eendraadsschema's (single-line electrical diagrams).
+Use online: [URL](https://william-sy.github.io/eendraadschema/)
 
 ## Functionaliteiten
 
@@ -38,17 +39,6 @@ Een web-gebaseerde editor voor het maken van eendraadsschema's (single-line elec
 - [Fabric.js](http://fabricjs.com/) - Canvas manipulatie en objecten
 - [jsPDF](https://github.com/parallax/jsPDF) - PDF export
 - Vanilla JavaScript
-
-## Toekomstige uitbreidingen
-
-- Nog meer elektrische symbolen
-- Gebogen lijnen en hoeken
-- Laag systeem (lagen)
-- Zoom in/out
-- Meerdere pagina's/sheets
-- Print functionaliteit
-- Kleurcodes voor verschillende circuits
-- Auto-routing van lijnen
 
 ## Licentie
 
