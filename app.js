@@ -136,20 +136,94 @@ resizeHandleBottom.addEventListener('mousedown', (e) => startResize(e, 'bottom')
 resizeHandleCorner.addEventListener('mousedown', (e) => startResize(e, 'corner'));
 
 // Always snap moved objects to grid
-canvas.on('object:moving', (e) => {
+canvas.on('object:modified', (e) => {
     e.target.set({
         left: snapToGrid(e.target.left),
         top: snapToGrid(e.target.top)
     });
+    
+    // Update connected lines when a symbol is moved
+    updateConnectedLines(e.target);
 });
+
+// Function to update lines connected to a moved symbol
+function updateConnectedLines(movedSymbol) {
+    if (!movedSymbol.symbolType && !(movedSymbol.type === 'group' && movedSymbol._objects)) {
+        return; // Not a symbol
+    }
+    
+    const symbolId = movedSymbol.id || movedSymbol.cacheKey;
+    if (!symbolId) return;
+    
+    canvas.forEachObject((obj) => {
+        if (obj.objectType === 'connectionLine') {
+            let needsUpdate = false;
+            const coords = [obj.x1, obj.y1, obj.x2, obj.y2];
+            
+            // Check start connection
+            if (obj.startConnection && obj.startConnection.symbolId === symbolId) {
+                const newPoint = getSymbolConnectionPoint(movedSymbol, obj.startConnection.connectionType);
+                coords[0] = newPoint.x;
+                coords[1] = newPoint.y;
+                needsUpdate = true;
+            }
+            
+            // Check end connection
+            if (obj.endConnection && obj.endConnection.symbolId === symbolId) {
+                const newPoint = getSymbolConnectionPoint(movedSymbol, obj.endConnection.connectionType);
+                coords[2] = newPoint.x;
+                coords[3] = newPoint.y;
+                needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
+                obj.set({
+                    x1: coords[0],
+                    y1: coords[1],
+                    x2: coords[2],
+                    y2: coords[3]
+                });
+                obj.setCoords();
+            }
+        }
+    });
+    
+    canvas.renderAll();
+}
+
+// Helper function to get a specific connection point of a symbol
+function getSymbolConnectionPoint(symbol, connectionType) {
+    const bounds = symbol.getBoundingRect();
+    
+    switch (connectionType) {
+        case 'center':
+            return { x: symbol.left, y: symbol.top };
+        case 'top':
+            return { x: symbol.left, y: bounds.top };
+        case 'bottom':
+            return { x: symbol.left, y: bounds.top + bounds.height };
+        case 'left':
+            return { x: bounds.left, y: symbol.top };
+        case 'right':
+            return { x: bounds.left + bounds.width, y: symbol.top };
+        default:
+            return { x: symbol.left, y: symbol.top };
+    }
+}
 
 // Grid settings
 let gridEnabled = false;
 const gridSize = 20;
 
+// Snap settings
+const snapDistance = 25; // Distance in pixels to snap to symbol centers
+let snapEnabled = true; // Whether snapping to symbols is enabled
+
 // Drawing mode state
 let drawingMode = null; // null, 'line', or 'text'
 let linePoints = [];
+let snapIndicator = null; // Visual indicator for snap points
+let connectionPointIndicators = []; // Visual indicators for all connection points
 
 // Symbol definitions
 const symbolDefinitions = {
@@ -687,7 +761,8 @@ canvasContainer.addEventListener('drop', (e) => {
                 originX: 'center', 
                 originY: 'center', 
                 selectable: true,
-                symbolType: symbolType 
+                symbolType: symbolType,
+                id: 'symbol_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
             });
             // Scale to reasonable size
             const scale = Math.min(50 / obj.width, 50 / obj.height);
@@ -701,7 +776,13 @@ canvasContainer.addEventListener('drop', (e) => {
         console.log('Using symbolDefinitions fallback');
         // fallback to code-defined symbol
         const symbol = symbolDefinitions[symbolType].draw();
-        symbol.set({ left: x, top: y, originX: 'center', originY: 'center' });
+        symbol.set({ 
+            left: x, 
+            top: y, 
+            originX: 'center', 
+            originY: 'center',
+            id: 'symbol_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+        });
         canvas.add(symbol);
         canvas.setActiveObject(symbol);
         canvas.renderAll();
@@ -733,7 +814,8 @@ canvasElement.addEventListener('drop', (e) => {
                 originX: 'center', 
                 originY: 'center', 
                 selectable: true,
-                symbolType: symbolType 
+                symbolType: symbolType,
+                id: 'symbol_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
             });
             // Scale to reasonable size
             const scale = Math.min(50 / obj.width, 50 / obj.height);
@@ -747,7 +829,13 @@ canvasElement.addEventListener('drop', (e) => {
         console.log('Using symbolDefinitions fallback');
         // fallback to code-defined symbol
         const symbol = symbolDefinitions[symbolType].draw();
-        symbol.set({ left: x, top: y, originX: 'center', originY: 'center' });
+        symbol.set({ 
+            left: x, 
+            top: y, 
+            originX: 'center', 
+            originY: 'center',
+            id: 'symbol_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+        });
         canvas.add(symbol);
         canvas.setActiveObject(symbol);
         canvas.renderAll();
@@ -900,6 +988,104 @@ function snapToGrid(value) {
     return Math.round(value / gridSize) * gridSize;
 }
 
+// Helper function to find nearby symbol connection points for snapping
+function findNearbySymbolCenter(x, y, customSnapDistance = snapDistance) {
+    let closestCenter = null;
+    let minDistance = customSnapDistance;
+    
+    canvas.forEachObject((obj) => {
+        // Check if object is a symbol (has symbolType or is an SVG group)
+        if (obj.symbolType || (obj.type === 'group' && obj._objects)) {
+            // Get the bounding box of the symbol
+            const bounds = obj.getBoundingRect();
+            
+            // Calculate connection points: center, top, bottom, left, right
+            const connectionPoints = [
+                { x: obj.left, y: obj.top, type: 'center' }, // Center
+                { x: obj.left, y: bounds.top, type: 'top' }, // Top center
+                { x: obj.left, y: bounds.top + bounds.height, type: 'bottom' }, // Bottom center
+                { x: bounds.left, y: obj.top, type: 'left' }, // Left center
+                { x: bounds.left + bounds.width, y: obj.top, type: 'right' } // Right center
+            ];
+            
+            // Check each connection point
+            connectionPoints.forEach(point => {
+                const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestCenter = { x: point.x, y: point.y, symbolId: obj.id || obj.cacheKey, type: point.type };
+                }
+            });
+        }
+    });
+    
+    return closestCenter;
+}
+
+// Enhanced snapping function that considers both grid and symbol centers
+function snapToGridOrSymbol(x, y) {
+    // First check for nearby symbol centers (only if snapping is enabled)
+    if (snapEnabled) {
+        const symbolCenter = findNearbySymbolCenter(x, y);
+        if (symbolCenter) {
+            return symbolCenter;
+        }
+    }
+    
+    // Fall back to grid snapping if enabled
+    if (gridEnabled) {
+        return { x: snapToGrid(x), y: snapToGrid(y) };
+    }
+    
+    // No snapping
+    return { x, y };
+}
+
+// Function to show all connection points when in line drawing mode
+function showAllConnectionPoints() {
+    hideAllConnectionPoints(); // Clear existing indicators
+    
+    canvas.forEachObject((obj) => {
+        if (obj.symbolType || (obj.type === 'group' && obj._objects)) {
+            const bounds = obj.getBoundingRect();
+            const connectionPoints = [
+                { x: obj.left, y: obj.top, type: 'center' },
+                { x: obj.left, y: bounds.top, type: 'top' },
+                { x: obj.left, y: bounds.top + bounds.height, type: 'bottom' },
+                { x: bounds.left, y: obj.top, type: 'left' },
+                { x: bounds.left + bounds.width, y: obj.top, type: 'right' }
+            ];
+            
+            connectionPoints.forEach(point => {
+                const indicator = new fabric.Circle({
+                    left: point.x,
+                    top: point.y,
+                    radius: 3,
+                    fill: 'rgba(0, 100, 255, 0.6)',
+                    stroke: 'blue',
+                    strokeWidth: 1,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false,
+                    evented: false,
+                    excludeFromExport: true
+                });
+                connectionPointIndicators.push(indicator);
+                canvas.add(indicator);
+            });
+        }
+    });
+    canvas.renderAll();
+}
+
+// Function to hide all connection point indicators
+function hideAllConnectionPoints() {
+    connectionPointIndicators.forEach(indicator => {
+        canvas.remove(indicator);
+    });
+    connectionPointIndicators = [];
+}
+
 // Draw grid on canvas
 function drawGrid() {
     const gridLines = [];
@@ -961,6 +1147,30 @@ document.getElementById('toggleGridBtn').addEventListener('click', () => {
     canvas.renderAll();
 });
 
+// Toggle snap to symbols
+document.getElementById('toggleSnapBtn').addEventListener('click', () => {
+    const btn = document.getElementById('toggleSnapBtn');
+    snapEnabled = !snapEnabled;
+    
+    if (snapEnabled) {
+        btn.classList.add('active');
+        // Show connection points if in line drawing mode
+        if (drawingMode === 'line') {
+            showAllConnectionPoints();
+        }
+    } else {
+        btn.classList.remove('active');
+        
+        // Remove snap indicator and connection points if snapping is disabled
+        if (snapIndicator) {
+            canvas.remove(snapIndicator);
+            snapIndicator = null;
+        }
+        hideAllConnectionPoints();
+        canvas.renderAll();
+    }
+});
+
 // Line drawing mode
 document.getElementById('drawLineBtn').addEventListener('click', () => {
     const btn = document.getElementById('drawLineBtn');
@@ -974,6 +1184,13 @@ document.getElementById('drawLineBtn').addEventListener('click', () => {
         canvas.hoverCursor = 'move';
         canvas.selection = true;
         canvas.forEachObject(obj => obj.selectable = true);
+        
+        // Remove snap indicator and connection points
+        if (snapIndicator) {
+            canvas.remove(snapIndicator);
+            snapIndicator = null;
+        }
+        hideAllConnectionPoints();
     } else {
         // Start line drawing
         drawingMode = 'line';
@@ -985,6 +1202,11 @@ document.getElementById('drawLineBtn').addEventListener('click', () => {
         canvas.selection = false;
         canvas.discardActiveObject();
         canvas.forEachObject(obj => obj.selectable = false);
+        
+        // Show all connection points when starting line drawing
+        if (snapEnabled) {
+            showAllConnectionPoints();
+        }
     }
     
     canvas.renderAll();
@@ -994,13 +1216,12 @@ document.getElementById('drawLineBtn').addEventListener('click', () => {
 canvas.on('mouse:down', (options) => {
     if (drawingMode === 'line') {
         const pointer = canvas.getPointer(options.e);
-        const x = gridEnabled ? snapToGrid(pointer.x) : pointer.x;
-        const y = gridEnabled ? snapToGrid(pointer.y) : pointer.y;
+        const snappedPoint = snapToGridOrSymbol(pointer.x, pointer.y);
         
-        linePoints.push({ x, y });
+        linePoints.push(snappedPoint);
         
         if (linePoints.length === 2) {
-            // Create the line
+            // Create the line with connection information
             const line = new fabric.Line([
                 linePoints[0].x, linePoints[0].y,
                 linePoints[1].x, linePoints[1].y
@@ -1008,7 +1229,16 @@ canvas.on('mouse:down', (options) => {
                 stroke: 'black',
                 strokeWidth: 2,
                 selectable: true,
-                objectType: 'connectionLine'
+                objectType: 'connectionLine',
+                // Store connection information for following symbols
+                startConnection: linePoints[0].symbolId ? {
+                    symbolId: linePoints[0].symbolId,
+                    connectionType: linePoints[0].type
+                } : null,
+                endConnection: linePoints[1].symbolId ? {
+                    symbolId: linePoints[1].symbolId,
+                    connectionType: linePoints[1].type
+                } : null
             });
             
             canvas.add(line);
@@ -1016,6 +1246,41 @@ canvas.on('mouse:down', (options) => {
             
             // Reset for next line
             linePoints = [];
+        }
+    }
+});
+
+// Mouse move handler for visual snap feedback
+canvas.on('mouse:move', (options) => {
+    if (drawingMode === 'line') {
+        const pointer = canvas.getPointer(options.e);
+        
+        // Remove existing snap indicator
+        if (snapIndicator) {
+            canvas.remove(snapIndicator);
+            snapIndicator = null;
+        }
+        
+        // Show snap indicator if snapping is enabled and near a symbol center
+        if (snapEnabled) {
+            const symbolCenter = findNearbySymbolCenter(pointer.x, pointer.y);
+            if (symbolCenter) {
+                snapIndicator = new fabric.Circle({
+                    left: symbolCenter.x,
+                    top: symbolCenter.y,
+                    radius: 8,
+                    fill: 'rgba(255, 0, 0, 0.3)',
+                    stroke: 'red',
+                    strokeWidth: 2,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false,
+                    evented: false,
+                    excludeFromExport: true
+                });
+                canvas.add(snapIndicator);
+                canvas.renderAll();
+            }
         }
     }
 });
@@ -1041,6 +1306,13 @@ document.getElementById('addTextBtn').addEventListener('click', () => {
         canvas.hoverCursor = 'text';
         canvas.selection = false;
         canvas.discardActiveObject();
+        
+        // Remove snap indicator and connection points when switching modes
+        if (snapIndicator) {
+            canvas.remove(snapIndicator);
+            snapIndicator = null;
+        }
+        hideAllConnectionPoints();
     }
     
     canvas.renderAll();
@@ -1072,15 +1344,21 @@ canvas.on('mouse:down', (options) => {
     }
 });
 
-// Enhanced export to exclude grid lines
+// Enhanced export to exclude grid lines and snap indicators
 const originalExportPng = document.getElementById('exportPngBtn').onclick;
 document.getElementById('exportPngBtn').onclick = () => {
-    // Temporarily hide grid
+    // Temporarily hide grid, snap indicator, and connection points
     const tempGridEnabled = gridEnabled;
     if (gridEnabled) {
         gridLines.forEach(line => line.set({ opacity: 0 }));
-        canvas.renderAll();
     }
+    if (snapIndicator) {
+        snapIndicator.set({ opacity: 0 });
+    }
+    connectionPointIndicators.forEach(indicator => {
+        indicator.set({ opacity: 0 });
+    });
+    canvas.renderAll();
     
     const dataURL = canvas.toDataURL({
         format: 'png',
@@ -1092,21 +1370,33 @@ document.getElementById('exportPngBtn').onclick = () => {
     a.download = `eendraadsschema_${Date.now()}.png`;
     a.click();
     
-    // Restore grid
+    // Restore grid, snap indicator, and connection points
     if (tempGridEnabled) {
         gridLines.forEach(line => line.set({ opacity: 1 }));
-        canvas.renderAll();
     }
+    if (snapIndicator) {
+        snapIndicator.set({ opacity: 1 });
+    }
+    connectionPointIndicators.forEach(indicator => {
+        indicator.set({ opacity: 1 });
+    });
+    canvas.renderAll();
 };
 
 const originalExportPdf = document.getElementById('exportPdfBtn').onclick;
 document.getElementById('exportPdfBtn').onclick = () => {
-    // Temporarily hide grid
+    // Temporarily hide grid, snap indicator, and connection points
     const tempGridEnabled = gridEnabled;
     if (gridEnabled) {
         gridLines.forEach(line => line.set({ opacity: 0 }));
-        canvas.renderAll();
     }
+    if (snapIndicator) {
+        snapIndicator.set({ opacity: 0 });
+    }
+    connectionPointIndicators.forEach(indicator => {
+        indicator.set({ opacity: 0 });
+    });
+    canvas.renderAll();
     
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
@@ -1123,11 +1413,17 @@ document.getElementById('exportPdfBtn').onclick = () => {
     pdf.addImage(dataURL, 'PNG', 0, 0, canvas.width, canvas.height);
     pdf.save(`eendraadsschema_${Date.now()}.pdf`);
     
-    // Restore grid
+    // Restore grid, snap indicator, and connection points
     if (tempGridEnabled) {
         gridLines.forEach(line => line.set({ opacity: 1 }));
-        canvas.renderAll();
     }
+    if (snapIndicator) {
+        snapIndicator.set({ opacity: 1 });
+    }
+    connectionPointIndicators.forEach(indicator => {
+        indicator.set({ opacity: 1 });
+    });
+    canvas.renderAll();
 };
 
 console.log('Eendraadsschema Editor geladen! Sleep symbolen naar het canvas om te beginnen.');
